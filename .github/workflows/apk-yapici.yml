@@ -1,4 +1,5 @@
 name: Tarla Uygulamasi APK Oluşturucu
+
 on:
   push:
     branches: [ "main", "master" ]
@@ -8,13 +9,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Android Ortamını Hazırla (Robot iş başında)
-        uses: android-actions/setup-android@v2
+      - name: Android Ortamını Hazırla
+        uses: android-actions/setup-android@v3
 
       - name: Capacitor'u Kur
         run: npm install -g @capacitor/core @capacitor/cli
@@ -44,11 +46,11 @@ jobs:
       - name: Android Altyapısını Ekle
         run: npx cap add android
 
-      - name: APK Derlemesini Başlat (Bu aşama biraz sürer)
+      - name: APK Derlemesini Başlat
         run: cd android && chmod +x ./gradlew && ./gradlew assembleDebug
 
       - name: Çıkan APK Dosyasını Sana Ver
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Tarla-Takip-Uygulamasi-Hazir-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
