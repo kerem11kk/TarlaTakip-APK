@@ -1,0 +1,54 @@
+name: Tarla Uygulamasi APK Oluşturucu
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Android Ortamını Hazırla (Robot iş başında)
+        uses: android-actions/setup-android@v2
+
+      - name: Capacitor'u Kur
+        run: npm install -g @capacitor/core @capacitor/cli
+
+      - name: Projeyi Başlat
+        run: npm init -y && npm install @capacitor/android
+
+      - name: Tarla Takip Ayarlarını Yapılandır
+        run: npx cap init TarlaTakip com.sahintarla.app --web-dir www || true
+
+      - name: Sahte Web Klasörü Oluştur
+        run: mkdir -p www && echo "Yukleniyor..." > www/index.html
+
+      - name: Netlify Sitene Bağlanmayı Ayarla
+        run: |
+          echo '{
+            "appId": "com.sahintarla.app",
+            "appName": "Tarla Takip",
+            "webDir": "www",
+            "bundledWebRuntime": false,
+            "server": {
+              "url": "https://tarlavetakip.netlify.app/",
+              "cleartext": true
+            }
+          }' > capacitor.config.json
+
+      - name: Android Altyapısını Ekle
+        run: npx cap add android
+
+      - name: APK Derlemesini Başlat (Bu aşama biraz sürer)
+        run: cd android && chmod +x ./gradlew && ./gradlew assembleDebug
+
+      - name: Çıkan APK Dosyasını Sana Ver
+        uses: actions/upload-artifact@v3
+        with:
+          name: Tarla-Takip-Uygulamasi-Hazir-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
