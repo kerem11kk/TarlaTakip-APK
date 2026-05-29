@@ -5,59 +5,58 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
-env:
-  # GitHub'ın 2026 Haziran zorunlu güncellemesi uyarısını çözer
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Node.js Kur
+
+      - name: Node.js (V24) Kurulumu
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          
-      - name: Java (JDK 17) Kur
+          node-version: 24
+
+      - name: Java (JDK 21) Kurulumu
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
-      - name: Capacitor'u Kur
-        run: npm install -g @capacitor/core @capacitor/cli
-
-      - name: Projeyi Başlat
-        run: npm init -y && npm install @capacitor/android
-
-      - name: Tarla Takip Ayarlarını Yapılandır
-        run: npx cap init TarlaTakip com.sahintarla.app --web-dir www || true
+      - name: Projeyi Başlat ve Capacitor Kur
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/android
+          npm install -D @capacitor/cli
 
       - name: Sahte Web Klasörü Oluştur
         run: mkdir -p www && echo "Yukleniyor..." > www/index.html
 
-      - name: Netlify Sitene Bağlanmayı Ayarla
+      - name: Capacitor Ayarlarını Yapılandır
         run: |
-          echo '{
+          cat <<EOF > capacitor.config.json
+          {
             "appId": "com.sahintarla.app",
-            "appName": "Tarla Takip",
+            "appName": "TarlaTakip",
             "webDir": "www",
-            "bundledWebRuntime": false,
             "server": {
               "url": "https://tarlavetakip.netlify.app/",
               "cleartext": true
             }
-          }' > capacitor.config.json
+          }
+          EOF
 
-      - name: Android Altyapısını Ekle
-        run: npx cap add android
+      - name: Android Platformunu Ekle ve Senkronize Et
+        run: |
+          npx cap add android
+          npx cap sync android
 
       - name: APK Derlemesini Başlat
-        run: cd android && chmod +x ./gradlew && ./gradlew assembleDebug
-
-      - name: Çıkan APK Dosyasını Sana Ver
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
+          
+      - name: Çıkan APK Dosyasını Yükle
         uses: actions/upload-artifact@v4
         with:
           name: Tarla-Takip-Uygulamasi-Hazir-APK
