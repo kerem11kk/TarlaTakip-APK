@@ -5,18 +5,26 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+env:
+  # GitHub'ın 2026 Haziran zorunlu güncellemesi uyarısını çözer
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
+      - name: Node.js Kur
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-
-      - name: Android Ortamını Hazırla
-        uses: android-actions/setup-android@v3
+          node-version: 20
+          
+      - name: Java (JDK 17) Kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
       - name: Capacitor'u Kur
         run: npm install -g @capacitor/core @capacitor/cli
